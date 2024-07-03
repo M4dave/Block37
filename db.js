@@ -172,4 +172,13 @@ const creteOrder_Products = async (orderID, productID, quantity, unitPrice) => {
 
 const createReviews = async () => {};
 
-export { createTables };
+export {
+  client,
+  createTables,
+  createUsers,
+  createProducts,
+  createCart,
+  createOrders,
+  creteOrder_Products,
+  createReviews,
+};
