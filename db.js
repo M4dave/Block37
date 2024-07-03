@@ -1,9 +1,11 @@
 //Database
-import pg from 'pg';
-import dotenv from 'dotenv';
-import chalk from 'chalk';
+import pg from "pg";
+import dotenv from "dotenv";
+import chalk from "chalk";
 
-const client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/Block37');
+const client = new pg.Client(
+  process.env.DATABASE_URL || "postgres://localhost/Block37"
+);
 
 dotenv.config();
 
@@ -79,20 +81,21 @@ const createTables = async () => {
     `;
 
     await client.query(SQL);
-    console.log(chalk.green('Database has been succesfully created!'));
+    console.log(chalk.green("Database has been succesfully created!"));
   } catch (error) {
-    console.log(chalk.red('Failed to create DB?!', error));
+    console.log(chalk.red("Failed to create DB?!", error));
   }
 };
-
+//For David
 const createUsers = async () => {};
 
 const createProducts = async () => {};
-
+//For David
 const createCart = async () => {};
 
 const createOrders = async () => {};
 
+//For David
 const creteOrder_Products = async () => {};
 
 const createReviews = async () => {};
