@@ -1,5 +1,3 @@
-//For David:
-
 //review all products
 //sort product price ascending
 //sort produce price descending
@@ -8,10 +6,10 @@
 //update 1.availability, 2. product details, 3.status, ONLY for an admin user
 //delete a product, ONLY for an admin user
 
-import express from "express";
 import chalk from "chalk";
 import { client } from "../db.js";
-import pg from "pg";
+import express from "express";
+// import pg from "pg";
 
 // const app = express();
 // const client = new pg.Client(process.env.DATABASE_URL || "postgres://localhost/Block37");
@@ -58,6 +56,7 @@ app.get("/products/:id", async (req, res) => {
   }
 });
 
+//Sort products by price
 app.get("/products/sort/asc", async (req, res) => {
   try {
     const products = await client.query(
@@ -71,6 +70,7 @@ app.get("/products/sort/asc", async (req, res) => {
   }
 });
 
+//Sort products by price descending
 app.get("/products/sort/desc", async (req, res) => {
   try {
     const products = await client.query(
@@ -88,6 +88,7 @@ app.get("/products/sort/desc", async (req, res) => {
   }
 });
 
+//Filter products by category
 app.get("/products/filter/:category", async (req, res) => {
   try {
     const { category } = req.params;
@@ -105,6 +106,7 @@ app.get("/products/filter/:category", async (req, res) => {
   }
 });
 
+//Update product
 app.put("/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -125,6 +127,7 @@ app.put("/products/:id", async (req, res) => {
   }
 });
 
+//Delete product
 app.delete("/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
