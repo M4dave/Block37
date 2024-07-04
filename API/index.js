@@ -10,9 +10,9 @@ const apiRouter = express.Router();
 
 apiRouter.use('/product', productRouter);
 apiRouter.use('/user', userRouter);
-// // apiRouter.use('/cart', cartRouter);
-// apiRouter.use('/order', orderRouter);
+apiRouter.use('/cart', cartRouter);
+apiRouter.use('/order', orderRouter);
 apiRouter.use('/review', reviewRouter);
-// apiRouter.use('/order_product', order_productRouter);
+apiRouter.use('/order_product', order_productRouter);
 
 export { apiRouter };
