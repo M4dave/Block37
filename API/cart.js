@@ -1,3 +1,9 @@
+import express from 'express';
+
+const cartRouter = express.Router();
+
+export { cartRouter };
+
 //view all cart
 
 //Cart is persistent across sessions - Even if I refresh or close my browser

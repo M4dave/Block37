@@ -1,11 +1,9 @@
 //Database
-import pg from "pg";
-import dotenv from "dotenv";
-import chalk from "chalk";
+import pg from 'pg';
+import dotenv from 'dotenv';
+import chalk from 'chalk';
 
-const client = new pg.Client(
-  process.env.DATABASE_URL || "postgres://localhost/Block37"
-);
+const client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/Block37');
 
 dotenv.config();
 
@@ -34,11 +32,11 @@ const createTables = async () => {
     CREATE TABLE Products(
     ID SERIAL PRIMARY KEY,
     Name VARCHAR(255) NOT NULL,
-    Details TEXT,
     Category TEXT, 
-    Price NUMERIC(10, 2) NOT NULL,
-    Availability INT,
-    Status TEXT
+    Price NUMERIC (10, 2) NOT NULL,
+    Availability Boolean NOT NULL,
+    Inventory INT NOT NULL,
+    Details TEXT
     );
 
     CREATE TABLE Cart(
@@ -53,7 +51,7 @@ const createTables = async () => {
     CREATE TABLE Orders(
     ID SERIAL PRIMARY KEY,
     UserID UUID,
-    Order_Time TIMESTAMP,
+    Order_Time TIMESTAMP DEFAULT NOW(),
     Order_Total NUMERIC (10, 2) NOT NULL,
     Status TEXT,
     FOREIGN KEY (UserID) REFERENCES Users(ID)
@@ -81,9 +79,9 @@ const createTables = async () => {
     `;
 
     await client.query(SQL);
-    console.log(chalk.green("Database has been succesfully created!"));
+    console.log(chalk.green('Database has been succesfully created!'));
   } catch (error) {
-    console.log(chalk.red("Failed to create DB?!", error));
+    console.log(chalk.red('Failed to create DB?!', error));
   }
 };
 
@@ -97,26 +95,41 @@ const createUsers = async () => {
     VALUES ('admin', 'admin', 'admin', 'admin', true);
     `; //SQL query
     await client.query(SQL); //execute SQL
-    console.log(chalk.green("User has been succesfully created!"));
+    console.log(chalk.green('User has been succesfully created!'));
   } catch (error) {
     //if error occurs
-    console.log(chalk.red("Failed to create User!", error));
+    console.log(chalk.red('Failed to create User!', error));
   } finally {
     //finally block
     await client.end(); //disconnect client
-    console.log(chalk.blue("Client has been disconnected!"));
+    console.log(chalk.blue('Client has been disconnected!'));
   }
 };
 
-const createProducts = async () => {};
+const createProducts = async () => {
+  const SQL = `
+  INSERT INTO Products(Name, Category, Price, Availability, Inventory, Details)
+  VALUES 
+  ('Apple', 'fruit', 4.99, true, 10, 'Pretty Sweet'),
+  ('iPhone', 'electronic', 1099, true, 5, 'Brand New'),
+  ('Tomato', 'vegetable', 0.99, true, 15, 'Very Nice'),
+  ('Chair', 'furniture', 97, true, 3, 'Open-boxed'),
+  ('Coke', 'drink', 1.99, true, 25, 'Heavy weight')
+  RETURNING *
+  `;
+  try {
+    const response = await client.query(SQL);
+    return response.rows;
+  } catch (err) {
+    console.log('created Pruducts table error: ', err);
+  }
+};
 
 const createCart = async (UserID, ProductID, Quantity) => {
   //create cart
   let client; //define client
   try {
-    client = new pg.Client(
-      process.env.DATABASE_URL || "postgres://localhost/Block37"
-    ); //create new client
+    client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/Block37'); //create new client
 
     await client.connect(); //connect to database
 
@@ -125,29 +138,39 @@ const createCart = async (UserID, ProductID, Quantity) => {
     VALUES ('${UserID}', '${ProductID}', '${Quantity}');
     `; //SQL query
     await client.query(SQL); //execute SQL
-    console.log(chalk.green("Cart has been succesfully created!"));
+    console.log(chalk.green('Cart has been succesfully created!'));
   } catch (error) {
     //if error occurs
-    console.log(chalk.red("Failed to create Cart!", error));
+    console.log(chalk.red('Failed to create Cart!', error));
   } finally {
     //finally block
     if (client) {
       //if client is defined
       await client.end();
-      console.log(chalk.blue("Client has been disconnected!"));
+      console.log(chalk.blue('Client has been disconnected!'));
     }
   }
 };
 
-const createOrders = async () => {};
+const createOrders = async (userId, orderTotal) => {
+  const SQL = `
+  INSERT INTO Orders(User_ID, Order_Total)
+  VALUES('${userId}','${orderTotal}')
+  RETURNIN *
+  `;
+  try {
+    const response = await client.query(SQL);
+    return response.rows;
+  } catch (err) {
+    console.log('created Orders table error: ', err);
+  }
+};
 
-const creteOrder_Products = async (orderID, productID, quantity, unitPrice) => {
+const createOrder_Products = async (orderID, productID, quantity, unitPrice) => {
   let client; //define client
 
   try {
-    client = new pg.Client(
-      process.env.DATABASE_URL || "postgres://localhost/Block37"
-    ); //create new client
+    client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/Block37'); //create new client
 
     await client.connect(); //connect to database
 
@@ -156,29 +179,32 @@ const creteOrder_Products = async (orderID, productID, quantity, unitPrice) => {
     VALUES ('${orderID}', '${productID}', '${quantity}', '${unitPrice}');
     `; //SQL query
     await client.query(SQL); //execute SQL
-    console.log(chalk.green("Order_Products has been succesfully created!"));
+    console.log(chalk.green('Order_Products has been succesfully created!'));
   } catch (error) {
     //if error occurs
-    console.log(chalk.red("Failed to create Order_Products!", error));
+    console.log(chalk.red('Failed to create Order_Products!', error));
   } finally {
     //finally block
     if (client) {
       //if client is defined
       await client.end();
-      console.log(chalk.blue("Client has been disconnected!"));
+      console.log(chalk.blue('Client has been disconnected!'));
     }
   }
 };
 
-const createReviews = async () => {};
-
-export {
-  client,
-  createTables,
-  createUsers,
-  createProducts,
-  createCart,
-  createOrders,
-  creteOrder_Products,
-  createReviews,
+const createReviews = async (userID, productId, rate, comment) => {
+  const SQL = `
+  INSERT INTO Reviews(User_ID, Product_ID, Rate, Comment)
+  VALUES ('${userID}', '${productId}', '${rate}', '${comment}')
+  RETURNIN *
+  `;
+  try {
+    const response = await client.query(SQL);
+    return response.rows;
+  } catch (err) {
+    console.log('created Reviews table error: ', err);
+  }
 };
+
+export { client, createTables, createUsers, createProducts, createCart, createOrders, createOrder_Products, createReviews };
