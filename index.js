@@ -3,7 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
 import cors from 'cors';
-import { createTables, createUsers, createProducts, createCart, createOrders, createOrder_Products, createReviews } from './db.js';
+import { createTables, createProducts, createCart, createOrders, createOrder_Products, createReviews } from './db.js';
 import { apiRouter } from './API/index.js';
 
 dotenv.config();
@@ -19,7 +19,6 @@ const startServer = async () => {
   try {
     await createTables();
     await createProducts();
-
     app.listen(port, () => {
       console.log(chalk.green(`server successfully listens on port ${port}`));
     });

@@ -23,10 +23,12 @@ const createTables = async () => {
     CREATE TABLE Users(
     ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     Username VARCHAR(255) NOT NULL,
+    Email VARCHAR(255) NOT NULL,
     Password VARCHAR(255) NOT NULL,
     Address VARCHAR(255) NOT NULL,
-    Wishlist VARCHAR(255) NOT NULL,
-    isAdmin Boolean
+    Wishlist VARCHAR(255) NOT NULL DEFAULT '',
+    Status TEXT DEFAULT 'active',
+    isAdmin Boolean DEFAULT FALSE
     );
 
     CREATE TABLE Products(
@@ -53,7 +55,7 @@ const createTables = async () => {
     UserID UUID,
     Order_Time TIMESTAMP DEFAULT NOW(),
     Order_Total NUMERIC (10, 2) NOT NULL,
-    Status TEXT,
+    Status TEXT DEFAULT 'Processing',
     FOREIGN KEY (UserID) REFERENCES Users(ID)
     );
 
@@ -82,27 +84,6 @@ const createTables = async () => {
     console.log(chalk.green('Database has been succesfully created!'));
   } catch (error) {
     console.log(chalk.red('Failed to create DB?!', error));
-  }
-};
-
-const createUsers = async () => {
-  //create users
-  try {
-    //try block
-    await client.connect(); //connect to database
-    const SQL = ` 
-    INSERT INTO Users (Username, Password, Address, Wishlist, isAdmin)
-    VALUES ('admin', 'admin', 'admin', 'admin', true);
-    `; //SQL query
-    await client.query(SQL); //execute SQL
-    console.log(chalk.green('User has been succesfully created!'));
-  } catch (error) {
-    //if error occurs
-    console.log(chalk.red('Failed to create User!', error));
-  } finally {
-    //finally block
-    await client.end(); //disconnect client
-    console.log(chalk.blue('Client has been disconnected!'));
   }
 };
 
@@ -152,17 +133,39 @@ const createCart = async (UserID, ProductID, Quantity) => {
   }
 };
 
-const createOrders = async (userId, orderTotal) => {
+const createOrders = async (userID, orderTotal) => {
   const SQL = `
-  INSERT INTO Orders(User_ID, Order_Total)
-  VALUES('${userId}','${orderTotal}')
-  RETURNIN *
+  INSERT INTO Orders (UserID, Order_Total)
+  VALUES('${userID}',${orderTotal})
+  RETURNING *;
   `;
   try {
     const response = await client.query(SQL);
     return response.rows;
   } catch (err) {
     console.log('created Orders table error: ', err);
+  }
+};
+
+const getOrdersByUser = async (userID) => {
+  const SQL = `
+  SELECT * FROM Orders WHERE UserID = '${userID}';
+  `;
+  try {
+    const response = await client.query(SQL);
+    return response.rows;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const getAllOrders = async () => {
+  const SQL = 'SELECT * FROM Orders;';
+  try {
+    const response = await client.query(SQL);
+    return response.rows;
+  } catch (err) {
+    console.log(err);
   }
 };
 
@@ -207,4 +210,4 @@ const createReviews = async (userID, productId, rate, comment) => {
   }
 };
 
-export { client, createTables, createUsers, createProducts, createCart, createOrders, createOrder_Products, createReviews };
+export { client, createTables, createProducts, createCart, createOrders, getOrdersByUser, getAllOrders, createOrder_Products, createReviews };
