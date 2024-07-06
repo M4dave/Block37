@@ -3,7 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
 import cors from 'cors';
-import { createTables, createProducts, createCart, createOrders, createOrder_Products, createReviews } from './db.js';
+import { createTables, createProducts, createCart, createOrders, createOrder_Product, createReviews } from './db.js';
 import { apiRouter } from './API/index.js';
 
 dotenv.config();

@@ -35,7 +35,7 @@ const createTables = async () => {
     ID SERIAL PRIMARY KEY,
     Name VARCHAR(255) NOT NULL,
     Category TEXT, 
-    Price NUMERIC (10, 2) NOT NULL,
+    Price NUMERIC(10, 2) NOT NULL,
     Availability Boolean NOT NULL,
     Inventory INT NOT NULL,
     Details TEXT
@@ -54,7 +54,7 @@ const createTables = async () => {
     ID SERIAL PRIMARY KEY,
     UserID UUID,
     Order_Time TIMESTAMP DEFAULT NOW(),
-    Order_Total NUMERIC (10, 2) NOT NULL,
+    Order_Total NUMERIC(10, 2) NOT NULL,
     Status TEXT DEFAULT 'Processing',
     FOREIGN KEY (UserID) REFERENCES Users(ID)
     );
@@ -63,7 +63,7 @@ const createTables = async () => {
     Order_ID INT,
     Product_ID INT,
     Quantity INT NOT NULL,
-    Unit_Price NUMERIC (10, 2) NOT NULL,
+    Unit_Price NUMERIC(10, 2) NOT NULL,
     FOREIGN KEY (Order_ID) REFERENCES Orders(ID),
     FOREIGN KEY (Product_ID) REFERENCES Products(ID),
     PRIMARY KEY (Order_ID, Product_ID)
@@ -133,6 +133,24 @@ const createCart = async (UserID, ProductID, Quantity) => {
   }
 };
 
+const calculateOrderTotal = async (orderItems) => {
+  let totalPrice = 0;
+
+  for (const item of orderItems) {
+    const SQL = `SELECT price FROM products WHERE id = $1;`;
+    const result = await client.query(SQL, [item.productID]);
+
+    if (result.rows.length > 0) {
+      const unitPrice = result.rows[0].price;
+      totalPrice += item.quantity * Number(unitPrice);
+    } else {
+      console.log(`Product with ID ${item.productID} not found.`);
+    }
+  }
+
+  return totalPrice;
+};
+
 const createOrders = async (userID, orderTotal) => {
   const SQL = `
   INSERT INTO Orders (UserID, Order_Total)
@@ -169,30 +187,43 @@ const getAllOrders = async () => {
   }
 };
 
-const createOrder_Products = async (orderID, productID, quantity, unitPrice) => {
-  let client; //define client
-
+const createOrder_Product = async (orderID, productID, quantity) => {
   try {
-    client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/Block37'); //create new client
-
-    await client.connect(); //connect to database
+    // get unit price
+    const unitPrice_SQL = `SELECT price FROM products WHERE ID = '${productID}'`;
+    const unitPrice_result = await client.query(unitPrice_SQL);
+    const unitPrice = unitPrice_result.rows[0].price;
 
     const SQL = `
-    INSERT INTO Order_Products (Order_ID, Product_ID, Quantity, Unit_Price)
-    VALUES ('${orderID}', '${productID}', '${quantity}', '${unitPrice}');
-    `; //SQL query
-    await client.query(SQL); //execute SQL
+      INSERT INTO Order_Products (Order_ID, Product_ID, Quantity, Unit_Price)
+      VALUES ('${orderID}', '${productID}', ${quantity}, ${unitPrice})
+      RETURNING*;
+    `;
+    await client.query(SQL);
     console.log(chalk.green('Order_Products has been succesfully created!'));
   } catch (error) {
-    //if error occurs
     console.log(chalk.red('Failed to create Order_Products!', error));
-  } finally {
-    //finally block
-    if (client) {
-      //if client is defined
-      await client.end();
-      console.log(chalk.blue('Client has been disconnected!'));
-    }
+    return error;
+  }
+};
+
+const allOrderItems = async () => {
+  try {
+    const response = await client.query('SELECT * FROM Order_Products;');
+    return response.rows;
+  } catch (err) {
+    console.log('Fetch all order items failed', err);
+  }
+};
+
+const getItemsByOrderId = async (orderId) => {
+  try {
+    const response = await client.query(`SELECT * FROM Order_Products WHERE Order_ID = $1`, [
+      orderId,
+    ]);
+    return response.rows;
+  } catch (err) {
+    console.log(err);
   }
 };
 
@@ -210,4 +241,17 @@ const createReviews = async (userID, productId, rate, comment) => {
   }
 };
 
-export { client, createTables, createProducts, createCart, createOrders, getOrdersByUser, getAllOrders, createOrder_Products, createReviews };
+export {
+  client,
+  createTables,
+  createProducts,
+  createCart,
+  calculateOrderTotal,
+  createOrders,
+  getOrdersByUser,
+  getAllOrders,
+  createOrder_Product,
+  allOrderItems,
+  getItemsByOrderId,
+  createReviews,
+};

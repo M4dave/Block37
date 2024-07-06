@@ -17,12 +17,10 @@ userRouter.post('/register', async (req, res) => {
   try {
     const { Username, Email, Password, Address } = req.body;
     const hashedPassword = await bcyrpt.hash(Password, 10);
-    const newUser = await client.query('INSERT INTO Users (Username, Email, Password, Address) VALUES ($1, $2, $3, $4) RETURNING *', [
-      Username,
-      Email,
-      hashedPassword,
-      Address,
-    ]);
+    const newUser = await client.query(
+      'INSERT INTO Users (Username, Email, Password, Address) VALUES ($1, $2, $3, $4) RETURNING *',
+      [Username, Email, hashedPassword, Address]
+    );
     res.json(newUser.rows);
     console.log(chalk.green('Successfully registered'));
   } catch (error) {
@@ -45,7 +43,10 @@ userRouter.post('/login', async (req, res) => {
     const isAuthenticated = await bcyrpt.compare(Password, user.password);
 
     if (isAuthenticated) {
-      res.json({ message: 'Successfully logged in', user: { id: user.id, username: user.username, email: user.email } });
+      res.json({
+        message: 'Successfully logged in',
+        user: { id: user.id, username: user.username, email: user.email },
+      });
       console.log(chalk.green('Successfully logged in'));
     } else {
       res.status(401).json({ error: 'Invalid email or password' });
@@ -61,13 +62,10 @@ userRouter.post('/login', async (req, res) => {
 userRouter.put('/:id', async (req, res) => {
   try {
     const { Username, Email, Password, Address } = req.body;
-    const updatedUser = await client.query('UPDATE Users SET Username = $1, Email = $2, Password = $3, Address=$4 WHERE id = $5 RETURNING *', [
-      Username,
-      Email,
-      Password,
-      Address,
-      req.params.id,
-    ]);
+    const updatedUser = await client.query(
+      'UPDATE Users SET Username = $1, Email = $2, Password = $3, Address=$4 WHERE id = $5 RETURNING *',
+      [Username, Email, Password, Address, req.params.id]
+    );
     res.json(updatedUser.rows);
     console.log(chalk.green('Successfully updated user profile'));
   } catch (error) {
@@ -89,7 +87,9 @@ userRouter.get('/', async (req, res) => {
 //Get wishlist
 userRouter.get('/:id/wishlist', async (req, res) => {
   try {
-    const wishlist = await client.query('SELECT Wishlist FROM Users WHERE ID = $1', [req.params.id]);
+    const wishlist = await client.query('SELECT Wishlist FROM Users WHERE ID = $1', [
+      req.params.id,
+    ]);
     res.send(wishlist.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -101,7 +101,9 @@ userRouter.get('/:id/wishlist', async (req, res) => {
 userRouter.post('/:id/wishlist', async (req, res) => {
   try {
     const { product_id } = req.body;
-    const productResult = await client.query('SELECT Name FROM Products WHERE ID = $1', [product_id]);
+    const productResult = await client.query('SELECT Name FROM Products WHERE ID = $1', [
+      product_id,
+    ]);
     const product = productResult.rows[0];
     const productName = product.name;
 
@@ -113,7 +115,10 @@ userRouter.post('/:id/wishlist', async (req, res) => {
     wishlist.push(productName);
     const updatedWishlist = wishlist.join(',');
 
-    const updateResult = await client.query('UPDATE Users SET Wishlist = $1 WHERE ID = $2 RETURNING *', [updatedWishlist, userId]);
+    const updateResult = await client.query(
+      'UPDATE Users SET Wishlist = $1 WHERE ID = $2 RETURNING *',
+      [updatedWishlist, userId]
+    );
     res.json(updateResult.rows[0]);
     console.log(chalk.green('Successfully added to wishlist'));
   } catch (error) {
@@ -125,7 +130,9 @@ userRouter.post('/:id/wishlist', async (req, res) => {
 //Delete a user
 userRouter.delete('/:id', async (req, res) => {
   try {
-    const deletedUser = await client.query('DELETE FROM Users WHERE id = $1 RETURNING *', [req.params.id]);
+    const deletedUser = await client.query('DELETE FROM Users WHERE id = $1 RETURNING *', [
+      req.params.id,
+    ]);
     res.json(deletedUser.rows);
     console.log(chalk.green('Successfully deleted user'));
   } catch (error) {
@@ -137,7 +144,10 @@ userRouter.delete('/:id', async (req, res) => {
 //Ban a user
 userRouter.put('/:id/ban', async (req, res) => {
   try {
-    const bannedUser = await client.query("UPDATE Users SET status = 'banned' WHERE id = $1 RETURNING *", [req.params.id]);
+    const bannedUser = await client.query(
+      "UPDATE Users SET status = 'banned' WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
     res.json(bannedUser.rows);
     console.log(chalk.green('Successfully banned user'));
   } catch (error) {

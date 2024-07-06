@@ -1,32 +1,6 @@
-//review all products
-//sort product price ascending
-//sort produce price descending
-//filter product by category
-//individual product details
-//update 1.availability, 2. product details, 3.status, ONLY for an admin user
-//delete a product, ONLY for an admin user
-
 import chalk from 'chalk';
 import { client } from '../db.js';
 import express from 'express';
-// import pg from "pg";
-
-// const app = express();
-// const client = new pg.Client(process.env.DATABASE_URL || "postgres://localhost/Block37");
-
-// app.use(express.json());
-
-// client.connect()
-//   .then(() => console.log(chalk.green("Connected to PostgreSQL database.")))
-//   .catch(err => console.error(chalk.red("Failed to connect to database:", err)));
-
-// Middleware for error handling
-// const errorHandler = (err, req, res, next) => {
-//   console.error(chalk.red("Error:", err.message));
-//   res.status(500).json({ error: "Internal Server Error" });
-// };
-
-//Get all products
 
 const productRouter = express.Router();
 
@@ -103,12 +77,10 @@ productRouter.put(':id', async (req, res) => {
     if (!isAdmin) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const product = await client.query('UPDATE products SET availability = $1, details = $2, status = $3 WHERE id = $4 RETURNING *', [
-      availability,
-      details,
-      status,
-      id,
-    ]);
+    const product = await client.query(
+      'UPDATE products SET availability = $1, details = $2, status = $3 WHERE id = $4 RETURNING *',
+      [availability, details, status, id]
+    );
     res.json(product.rows[0]);
     console.log(chalk.green('Successfully updated product'));
   } catch (error) {
