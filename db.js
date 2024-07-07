@@ -241,6 +241,84 @@ const createReviews = async (userID, productId, rate, comment) => {
   }
 };
 
+const getCart = async (userId) => {
+  const SQL = `
+  SELECT c.userid, c.quantity, p.*, (c.quantity * p.price) as item_total
+  FROM Cart c
+  JOIN Products p ON c.ProductID = p.ID 
+  WHERE UserID = '${userId}';
+  `;
+  try {
+    const response = await client.query(SQL);
+    return response.rows;
+  } catch (err) {
+    return err;
+  }
+};
+
+const deleteCart = async (userId) => {
+  const SQL = `
+  DELETE FROM Cart WHERE UserID = '${userId}';
+  `;
+
+  try {
+    const response = await client.query(SQL);
+    return response.rows;
+  } catch (err) {
+    return err;
+  }
+};
+
+const getQtyInCart = async (userID, productID) => {
+  const SQL = `
+    SELECT quantity FROM Cart 
+    WHERE productID = ${productID} AND userID = '${userID}';
+  `;
+
+  const response = await client.query(SQL);
+  return response.rows.length > 0 ? response.rows[0].quantity : 0;
+};
+
+const updateCart = async (userId, cartItem) => {
+  let quantity = cartItem.quantity;
+
+  // check if product already exisited in user's cart
+  const inCartQuantity = await getQtyInCart(userId, cartItem.productID);
+
+  if (inCartQuantity) {
+    quantity += Number(inCartQuantity);
+  }
+
+  const updateSQL = `
+    UPDATE Cart SET quantity = ${quantity} 
+    WHERE userid = '${userId}' AND productID = ${cartItem.productID}; 
+  `;
+
+  const insertSQL = `
+    INSERT INTO Cart(UserID, ProductID, Quantity)
+    VALUES ('${userId}', ${cartItem.productID}, ${quantity});
+  `;
+  try {
+    const response = await client.query(quantity !== cartItem.quantity ? updateSQL : insertSQL);
+    return response.rows;
+  } catch (err) {
+    return err;
+  }
+};
+
+const getCartTotal = async (userId) => {
+  const cartItems = await getCart(userId);
+  if (cartItems.length > 0) {
+    let total = 0;
+    cartItems.forEach((item) => {
+      total += Number(item.item_total);
+    });
+    return total;
+  } else {
+    return 'cart is empty!';
+  }
+};
+
 export {
   client,
   createTables,
@@ -254,4 +332,8 @@ export {
   allOrderItems,
   getItemsByOrderId,
   createReviews,
+  getCart,
+  deleteCart,
+  updateCart,
+  getCartTotal,
 };

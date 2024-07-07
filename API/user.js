@@ -8,7 +8,10 @@
 import express from 'express';
 import bcyrpt from 'bcrypt';
 import chalk from 'chalk';
-import { client } from '../db.js';
+import jwt from 'jsonwebtoken';
+import { client, updateCart } from '../db.js';
+
+const jwtSignature = 'secretForNow';
 
 const userRouter = express.Router();
 
@@ -43,10 +46,28 @@ userRouter.post('/login', async (req, res) => {
     const isAuthenticated = await bcyrpt.compare(Password, user.password);
 
     if (isAuthenticated) {
-      res.json({
+      const token = jwt.sign(
+        {
+          id: user.id,
+          username: user.username,
+        },
+        jwtSignature,
+        { expiresIn: '1w' }
+      );
+
+      // get req.body.cartItems, if arrary is not empty, merge items to cart table
+      for (let i = 0; i < req.body.cartItems.length; i++) {
+        const item = req.body.cartItems[i];
+        await updateCart(user.id, item);
+      }
+
+      res.send({
         message: 'Successfully logged in',
-        user: { id: user.id, username: user.username, email: user.email },
+        token: token,
       });
+
+      // save token locally in front end
+
       console.log(chalk.green('Successfully logged in'));
     } else {
       res.status(401).json({ error: 'Invalid email or password' });
@@ -79,6 +100,16 @@ userRouter.get('/', async (req, res) => {
   try {
     const allUsers = await client.query('SELECT * FROM Users');
     res.json(allUsers.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//Get User by username
+userRouter.get('/username', async (req, res) => {
+  try {
+    const user = await client.query(`SELECT * FROM Users WHERE Username = '${req.body.username}'`);
+    res.json(user.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

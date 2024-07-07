@@ -7,11 +7,12 @@ import {
   createOrder_Product,
   allOrderItems,
   getItemsByOrderId,
+  deleteCart,
 } from '../db.js';
 
 const orderRouter = express.Router();
 
-//create an order and create order_product
+//create an order and create order_product, and clear cart
 orderRouter.post('/:id/items', async (req, res) => {
   const orderTotal = await calculateOrderTotal(req.body.order_items);
 
@@ -24,6 +25,7 @@ orderRouter.post('/:id/items', async (req, res) => {
       createOrder_Product(orderID, item.productID, item.quantity);
     }
 
+    await deleteCart(req.params.id);
     res.status(201).send(newOrder);
   } catch (err) {
     res.status(500).send(err);
