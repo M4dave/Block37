@@ -106,33 +106,6 @@ const createProducts = async () => {
   }
 };
 
-const createCart = async (UserID, ProductID, Quantity) => {
-  //create cart
-  let client; //define client
-  try {
-    client = new pg.Client(process.env.DATABASE_URL || 'postgres://localhost/Block37'); //create new client
-
-    await client.connect(); //connect to database
-
-    const SQL = `
-    INSERT INTO Cart (UserID, ProductID, Quantity)
-    VALUES ('${UserID}', '${ProductID}', '${Quantity}');
-    `; //SQL query
-    await client.query(SQL); //execute SQL
-    console.log(chalk.green('Cart has been succesfully created!'));
-  } catch (error) {
-    //if error occurs
-    console.log(chalk.red('Failed to create Cart!', error));
-  } finally {
-    //finally block
-    if (client) {
-      //if client is defined
-      await client.end();
-      console.log(chalk.blue('Client has been disconnected!'));
-    }
-  }
-};
-
 const calculateOrderTotal = async (orderItems) => {
   let totalPrice = 0;
 
@@ -323,7 +296,6 @@ export {
   client,
   createTables,
   createProducts,
-  createCart,
   calculateOrderTotal,
   createOrders,
   getOrdersByUser,
